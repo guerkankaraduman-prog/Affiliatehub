@@ -1,3 +1,4 @@
+import { SignedIn, SignedOut, SignIn } from "@clerk/clerk-react";
 import { useState } from “react”;
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from “recharts”;
 
