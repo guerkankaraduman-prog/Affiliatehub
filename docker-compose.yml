@@ -1,0 +1,105 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: affiliate-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: affiliate_platform
+      POSTGRES_USER: affiliate
+      POSTGRES_PASSWORD: affiliate_dev_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U affiliate -d affiliate_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: affiliate-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+      RUST_LOG: info
+      ENVIRONMENT: development
+      DATABASE_URL: postgres://affiliate:affiliate_dev_password@postgres:5432/affiliate_platform
+      DATABASE_MAX_CONNECTIONS: 20
+      DATABASE_MIN_CONNECTIONS: 5
+      CLERK_SECRET_KEY: sk_live_local_development_backend_secret
+      CLERK_PUBLISHABLE_KEY: pk_live_local_development_public
+      CLERK_JWKS_URL: https://clerk.affiliateplatform.local/.well-known/jwks.json
+      CLERK_WEBHOOK_SECRET: whsec_live_local_development_webhook
+      CLERK_ISSUER: https://clerk.affiliateplatform.local
+      ALLOWED_ORIGINS: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000
+      ATTRIBUTION_WINDOW_DAYS: 30
+      CLICK_DEDUP_WINDOW_SECONDS: 1800
+      COOKIE_DOMAIN: localhost
+      COOKIE_SECURE: "false"
+      DEFAULT_COMMISSION_RATE: 10.00
+      AUTO_APPROVAL_DAYS: 14
+      MIN_PAYOUT_AMOUNT: 50.00
+      RATE_LIMIT_ANONYMOUS: 60
+      RATE_LIMIT_AUTHENTICATED: 120
+      RATE_LIMIT_TRACKING: 120
+      POSTHOG_API_KEY: phc_live_local_backend
+      POSTHOG_HOST: https://app.posthog.com
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 25s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: runner
+    container_name: affiliate-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:8080/v1
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_live_local_development_public
+      CLERK_SECRET_KEY: sk_live_local_frontend_secret
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+      NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: /dashboard
+      NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: /dashboard
+      NEXT_PUBLIC_POSTHOG_KEY: phc_live_local_frontend
+      NEXT_PUBLIC_POSTHOG_HOST: https://app.posthog.com
+      NEXT_PUBLIC_APP_NAME: Affiliate Platform
+      NEXT_PUBLIC_TRACKING_DOMAIN: http://localhost:8080
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  postgres_data:

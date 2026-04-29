@@ -1,0 +1,38 @@
+[package]
+name = "affiliate-platform-backend"
+version = "0.1.0"
+edition = "2021"
+authors = ["Affiliate Platform Team"]
+description = "Rust/Axum backend for the Affiliate Marketing Platform"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros"] }
+axum-extra = { version = "0.9", features = ["cookie"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json", "ipnetwork", "migrate"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+jsonwebtoken = "9"
+reqwest = { version = "0.12", features = ["json"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace", "compression-gzip"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = "1"
+dotenvy = "0.15"
+validator = { version = "0.16", features = ["derive"] }
+sha2 = "0.10"
+hex = "0.4"
+rand = "0.8"
+base62 = "2"
+csv = "1"
+anyhow = "1"
+ipnetwork = "0.20"
+http = "1"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true

@@ -1,0 +1,46 @@
+app = "affiliate-platform-api"
+primary_region = "iad"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  HOST = "0.0.0.0"
+  PORT = "8080"
+  ENVIRONMENT = "production"
+  RUST_LOG = "info"
+  ATTRIBUTION_WINDOW_DAYS = "30"
+  CLICK_DEDUP_WINDOW_SECONDS = "1800"
+  DEFAULT_COMMISSION_RATE = "10.00"
+  AUTO_APPROVAL_DAYS = "14"
+  MIN_PAYOUT_AMOUNT = "50.00"
+  RATE_LIMIT_ANONYMOUS = "60"
+  RATE_LIMIT_AUTHENTICATED = "120"
+  RATE_LIMIT_TRACKING = "120"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 200
+    soft_limit = 150
+
+[[http_service.checks]]
+  grace_period = "20s"
+  interval = "15s"
+  method = "GET"
+  timeout = "5s"
+  path = "/health"
+  protocol = "http"
+
+[metrics]
+  port = 8080
+  path = "/metrics"

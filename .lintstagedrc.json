@@ -1,0 +1,12 @@
+{
+  "frontend/**/*.{js,jsx,ts,tsx}": [
+    "pnpm --dir frontend exec eslint --fix",
+    "pnpm --dir frontend exec prettier --write"
+  ],
+  "frontend/**/*.{json,css,scss,md,yml,yaml}": [
+    "pnpm --dir frontend exec prettier --write"
+  ],
+  "backend/**/*.rs": [
+    "cargo fmt --manifest-path backend/Cargo.toml --all"
+  ]
+}
